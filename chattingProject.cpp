@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 
         cout << " 임시 id 추출 : " << userID << endl;
 
-        my_nick = "test///"+ userID;
+        my_nick = "` " + userID + " testFunc " + "SELECT * FROM member";
 
         client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
@@ -153,7 +153,28 @@ int main(int argc, char* argv[])
 
     }
 
+    std::thread th2(chat_recv);
 
+    char buf[MAX_SIZE] = { };
+    string msg;
+    while (1)
+    {
+        cout << "1111" << endl;
+
+        ZeroMemory(&buf, MAX_SIZE);
+
+        cout << "2222" << endl;
+        if (recv(client_sock, buf, MAX_SIZE, 0) > 0)
+        {
+            cout << "3333" << endl;
+            msg = buf;
+            cout << "msg ::" << msg << endl;
+            break;
+        }
+    }
+
+
+    /*
     int select, x = 39, y = 17, input;
 
     while(true)
@@ -231,7 +252,7 @@ int main(int argc, char* argv[])
             // 회원가입
             inputMembership();
         }
-    
+       */
 }
 
 
@@ -351,14 +372,24 @@ void client(string myId)
 
 // 채팅 받아옴
 int chat_recv() {
+    cout << "chat_recv" << endl;
     char buf[MAX_SIZE] = { };
     string msg;
     while (1)
     {
+        cout << "1111" << endl;
+
         ZeroMemory(&buf, MAX_SIZE);
+
+        cout << "2222" << endl;
         if (recv(client_sock, buf, MAX_SIZE, 0) > 0) 
         {
+            cout << "3333" << endl;
             msg = buf;
+
+
+            cout << "msg ::" << msg << endl;
+
             //cout << "buf :" << buf << endl;
             stringstream ss(msg);  // 문자열을 스트림화
             string stream1, stream2, stream3, stream4, stream5;

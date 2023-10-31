@@ -88,6 +88,8 @@ int main() {
 
     if (!code) {
         server_init();
+        connectionDB();         //DB연결
+
         for (int i = 0; i < MAX_CLIENT; i++) {
             // 인원 수 만큼 thread 생성해서 각각의 클라이언트가 동시에 소통할 수 있도록 함.
             th1[i] = std::thread(add_client, i);
@@ -167,6 +169,7 @@ void add_client(int ti) {
     // Winsock2의 recv 함수. client가 보낸 닉네임을 받음.
     new_client.user = string(buf);
     new_client.ti = ti;
+    
 
 
     string separate, substr; // temp역할하는 substr 변수
@@ -181,10 +184,10 @@ void add_client(int ti) {
     
 
     if (stream[0] == "`") {
-        string myId = stream[1];
+        string user = stream[1];
         string funcName = stream[2];
         string select = stream[3];
-
+        std::thread th(recv_msg, user);
         int eraseLength = 0;
         eraseLength = size(stream[0]) + size(stream[1]) + size(stream[2]) + 3;
         separate.erase(0, eraseLength); // 쿼리문 만 남겨놓은 거
@@ -193,20 +196,24 @@ void add_client(int ti) {
 
         if (select == "SELECT")
         {
-
+            string msg= "하이";
+            cout << "sck :: " << new_client.sck << endl;
+            send(new_client.sck, msg.c_str(), MAX_SIZE, 0);
+            selectQuery(user, funcName, separate);
         }
         else if (select == "INSERT")
         {
-
+            insertQuery(user, separate);
         }
         else if (select == "UPDATE")
         {
-
+            updateQuery(user, separate);
         }
         
     }
     else {
         string msg = "[공지] " + new_client.user + " 님이 입장했습니다.";
+
         pctList.push_back(new_client.user);
         insertPtcpt();
 
@@ -218,6 +225,7 @@ void add_client(int ti) {
 
         client_count++; // client 수 증가.
         cout << "[공지] 현재 접속자 수 : " << client_count << "명" << endl;
+        send(new_client.sck, msg.c_str(), MAX_SIZE, 0);
         send_msg(msg.c_str()); // c_str : string 타입을 const chqr* 타입으로 바꿔줌.
 
         th.join();
@@ -464,12 +472,17 @@ void selectQuery(string user, string funcName, string sql)
     sql::Statement* stmt;
     sql::ResultSet* res;
 
+    cout << "sql :: " << sql << endl;
+
     // select문 실행
     stmt = con->createStatement();
     res = stmt->executeQuery(sql);
 
+    cout << "selectQuery :: " << user << endl;
 
-    if (funcName == "test") {
+
+
+    if (funcName == "testFunc") {
         testQ(res, user);
     }
 
