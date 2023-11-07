@@ -46,7 +46,7 @@ void insertMsgInfo(string msg);
 
 // DB 연결
 void connectionDB();
-void selectQuery(string user, string funcName, string sql);
+string selectQuery(string user, string funcName, string sql);
 string testQ(sql::ResultSet* res, string user);
 string insertQuery(string user, string sql);
 string updateQuery(string user, string sql);
@@ -172,9 +172,9 @@ void add_client(int ti) {
     
 
 
-    string separate, substr; // temp역할하는 substr 변수
-    separate = new_client.user; 
-    istringstream ss(separate);
+    string query, substr; // temp역할하는 substr 변수
+    query = new_client.user;
+    istringstream ss(query);
     vector<string> stream;
 
     while (getline(ss, substr, ' ')) {
@@ -184,30 +184,32 @@ void add_client(int ti) {
     
 
     if (stream[0] == "`") {
+        string finalRes;
         string user = stream[1];
         string funcName = stream[2];
         string select = stream[3];
         std::thread th(recv_msg, user);
         int eraseLength = 0;
         eraseLength = size(stream[0]) + size(stream[1]) + size(stream[2]) + 3;
-        separate.erase(0, eraseLength); // 쿼리문 만 남겨놓은 거
+        query.erase(0, eraseLength); // 쿼리문 만 남겨놓은 거
 
         cout << "buf :::: " << new_client.user << endl;
 
         if (select == "SELECT")
         {
             string msg= "하이";
-            cout << "sck :: " << new_client.sck << endl;
-            send(new_client.sck, msg.c_str(), MAX_SIZE, 0);
-            selectQuery(user, funcName, separate);
+            // cout << "sck :: " << new_client.sck << endl;
+            
+            finalRes = selectQuery(user, funcName, query);
+            send(new_client.sck, finalRes.c_str(), MAX_SIZE, 0);
         }
         else if (select == "INSERT")
         {
-            insertQuery(user, separate);
+            insertQuery(user, query);
         }
         else if (select == "UPDATE")
         {
-            updateQuery(user, separate);
+            updateQuery(user, query);
         }
         
     }
@@ -466,7 +468,7 @@ void connectionDB() {
 
 
 // SELECT 함수
-void selectQuery(string user, string funcName, string sql)
+string selectQuery(string user, string funcName, string sql)
 {
     string result;
     sql::Statement* stmt;
@@ -483,22 +485,43 @@ void selectQuery(string user, string funcName, string sql)
 
 
     if (funcName == "testFunc") {
-        testQ(res, user);
+        result = testQ(res, user);
     }
-
 
     delete stmt;
     delete res;
+
+    return result;
 }
 
 
 // func별 함수(test)
 string testQ(sql::ResultSet* res, string user)
 {
-    string result;
+    string result, id = "";
+    int i = 1;
 
     cout << "testQ :: 함수 들어옴" << endl;
     cout << "user :: " << user << endl;
+
+    while (res->next()) {
+        cout << i << ". ";
+        cout << "ID : " << res->getString("memberID") << ",";
+        cout << "PW : " << res->getString("passWord") << endl;
+        result += i + ". ID : " + res->getString("memberID") + ", PW : " + res->getString("passWord") + "\n";
+        i++;
+    }
+
+    /*
+    string idYN = "false";
+    while (res->next()) {
+        id = res->getString("memberID");
+        if (id != "") {
+            idYN = "true";
+        }
+    }
+    result = idYN;
+    */
 
     return result;
 }

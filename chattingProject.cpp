@@ -116,6 +116,10 @@ void gotoxy(int x, int y);                                                  // �
 // 채팅 프로그램 - 메인.
 int main(int argc, char* argv[])
 {  
+    
+    string userID, sendStr, msg;
+    char buf[MAX_SIZE] = { };
+    
     // 서버 연결
     WSADATA wsa;
 
@@ -125,14 +129,6 @@ int main(int argc, char* argv[])
     int code = WSAStartup(MAKEWORD(2, 2), &wsa);
 
     if (!code) {
-        // 임시 id 추출. (5자리 랜덤숫자)
-        srand(time(NULL)); 
-        string userID = to_string( rand() % 10000 + 10000);
-
-        cout << " 임시 id 추출 : " << userID << endl;
-
-        my_nick = "` " + userID + " testFunc " + "SELECT * FROM member";
-
         client_sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 
         // 연결할 서버 정보 설정 부분
@@ -145,33 +141,28 @@ int main(int argc, char* argv[])
             if (!connect(client_sock, (SOCKADDR*)&client_addr, sizeof(client_addr))) { // 위에 설정한 정보에 해당하는 server로 연결!
                 cout << "Server Connect" << endl;
 
-                send(client_sock, my_nick.c_str(), my_nick.length(), 0); // 연결에 성공하면 client 가 입력한 닉네임을 서버로 전송
+                
                 break;
             }
             cout << "Connecting..." << endl;
         }
-
     }
 
     std::thread th2(chat_recv);
 
-    char buf[MAX_SIZE] = { };
-    string msg;
-    while (1)
-    {
-        cout << "1111" << endl;
+    // 임시 id 추출. (5자리 랜덤숫자)
+    srand(time(NULL));
+    userID = to_string(rand() % 10000 + 10000);
+    // cout << " 임시 id 추출 : " << userID << endl;
 
-        ZeroMemory(&buf, MAX_SIZE);
+    
 
-        cout << "2222" << endl;
-        if (recv(client_sock, buf, MAX_SIZE, 0) > 0)
-        {
-            cout << "3333" << endl;
-            msg = buf;
-            cout << "msg ::" << msg << endl;
-            break;
-        }
-    }
+    cout << "아이디 입력 : ";
+    cin >> userID;
+
+    sendStr = "` " + userID + " testFunc " + "SELECT memberID, passWord FROM member";
+    send(client_sock, sendStr.c_str(), sendStr.length(), 0); //채팅방 들어가기 전에 물어봄
+    
 
 
     /*
